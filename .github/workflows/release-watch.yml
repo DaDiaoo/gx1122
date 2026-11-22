@@ -1,7 +1,7 @@
 name: release-watch
 on:
   schedule:
-    - cron: "*/20 * * * *"      # 每 20 分钟
+    - cron: "0 * * * *"        # 每小时整点（UTC），北京时间每小时第 0 分左右
   workflow_dispatch:
 
 permissions:
@@ -14,18 +14,23 @@ concurrency:
 jobs:
   watch:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
       - name: Run watcher
         env:
+          SILENT_FIRST_RUN: "0"
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_TO:   ${{ secrets.MAIL_TO }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python monitor.py
+
       - name: Persist state.json
         run: |
           git config user.name  "release-watcher"
