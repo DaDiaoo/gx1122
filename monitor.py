@@ -15,7 +15,7 @@ GitHub Release 监控 -> 邮件通知（APK 直链 + 完整更新日志）
 环境变量：
     SMTP_USER / SMTP_PASS   QQ 邮箱 + SMTP 授权码（不填只打印）
     SMTP_HOST= smtp.qq.com   SMTP_PORT=465（465=SSL，587=STARTTLS）
-    MAIL_TO=888888@qq.com    逗号分隔多人
+    MAIL_TO=1670888582@qq.com    逗号分隔多人
     MAIL_FROM               默认 = SMTP_USER
     GITHUB_TOKEN            可选，限额 60 -> 5000 次/小时
     INCLUDE_PRERELEASE=1    预发布也算新版本
@@ -75,7 +75,7 @@ SMTP_HOST = os.getenv("SMTP_HOST", "smtp.qq.com").strip()
 SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
 SMTP_USER = os.getenv("SMTP_USER", "").strip()
 SMTP_PASS = os.getenv("SMTP_PASS", "").strip()
-MAIL_TO   = [x.strip() for x in os.getenv("MAIL_TO", "8888888@qq.com").split(",") if x.strip()]
+MAIL_TO   = [x.strip() for x in os.getenv("MAIL_TO", "1670888582@qq.com").split(",") if x.strip()]
 MAIL_FROM = os.getenv("MAIL_FROM", "").strip() or SMTP_USER
 
 
@@ -445,100 +445,6 @@ def main() -> int:
         log("[DONE] 已通知并更新 state")
         return 0
 
-    save_state(state)
-    log("[DONE] 邮件未发出，state 保留旧 seen，下轮会重试")
-    return 1
-
-
-if __name__ == "__main__":
-    try:
-        sys.exit(main())
-    except KeyboardInterrupt:
-        sys.exit(130)n" in sys.argv
-    force_init = "--init" in sys.argv
-
-    state = load_state()
-    updates = []
-    deferred_seen = {}   # 发送成功后才落盘的 seen
-    immediate_seen = {}  # 建基线，立即落盘
-
-    for item in WATCH:
-        repo, alias = item["repo"], item["alias"]
-        try:
-            raw = gh_api(f"/repos/{repo}/releases?per_page={PER_PAGE}")
-        except Exception as e:
-            log(f"[WARN] {repo} 查询失败，跳过本轮: {e}")
-            continue
-
-        if not isinstance(raw, list) or not raw:
-            log(f"[INFO] {repo} 暂无 release 列表（或返回空）")
-            continue
-
-        rels = [
-            pick_release(r) for r in raw
-            if not r.get("draft") and (INCLUDE_PRERELEASE or not r.get("prerelease"))
-        ]
-        if not rels:
-            log(f"[INFO] {repo} 没有符合过滤条件的 release")
-            continue
-
-        entry = state["repos"].setdefault(repo, {"seen": [], "initialized": False})
-        seen = set(entry.get("seen") or [])
-        latest = rels[0]["tag"]
-
-        if force_init or not entry.get("initialized"):
-            if force_init or SILENT_FIRST_RUN:
-                immediate_seen[repo] = [r["tag"] for r in rels][:200]
-                entry["initialized"] = True
-                entry["last_check"] = now_iso()
-                entry["latest"] = latest
-                log(f"[INIT] {repo} 建立基线，当前最新 {latest}（本轮不发信）")
-                continue
-
-        fresh = [r for r in rels if r["tag"] not in seen]
-        if not fresh:
-            entry["last_check"] = now_iso()
-            entry["latest"] = latest
-            log(f"[--] {repo} 无新版本，最新仍是 {latest}")
-            continue
-
-        fresh.sort(key=lambda r: r["published"] or "")
-        log(f"[NEW] {repo} 发现 {len(fresh)} 个新版本: " + ", ".join(r["tag"] for r in fresh))
-        updates.append({"repo": repo, "alias": alias, "releases": fresh})
-
-        merged = []
-        for t in [r["tag"] for r in rels] + list(entry.get("seen") or []):
-            if t and t not in merged:
-                merged.append(t)
-        deferred_seen[repo] = merged[:200]
-        entry["initialized"] = True
-        entry["last_check"] = now_iso()
-        entry["latest"] = latest
-
-    # 基线 / 时间戳：总是落盘
-    for repo, seen in immediate_seen.items():
-        state["repos"].setdefault(repo, {})["seen"] = seen
-
-    if not updates:
-        if not dry_run:
-            save_state(state)
-        log("[DONE] 本轮无新版本")
-        return 0
-
-    if dry_run:
-        subject, plain, _ = build_message(updates)
-        log("[DRY-RUN] 命中的邮件内容如下（不发信、不写 state）：")
-        print(f"Subject: {subject}\n\n{plain}")
-        return 0
-
-    if send_mail(updates):
-        for repo, seen in deferred_seen.items():
-            state["repos"].setdefault(repo, {})["seen"] = seen
-        save_state(state)
-        log("[DONE] 已通知并更新 state")
-        return 0
-
-    # 发信失败：不吞掉新版本，state 不写 seen，下一轮重试
     save_state(state)
     log("[DONE] 邮件未发出，state 保留旧 seen，下轮会重试")
     return 1
