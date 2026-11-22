@@ -1,1 +1,32 @@
-{"repos": {}}
+{
+  "repos": {
+    "FongMi/Release": {
+      "seen": [
+        "5.8.9",
+        "5.8.8",
+        "5.8.7",
+        "module"
+      ],
+      "initialized": true,
+      "last_check": "2026-11-22T02:02:08+00:00",
+      "latest": "5.8.9"
+    },
+    "Null9797/halo-tv": {
+      "seen": [
+        "v3.5.1-halo",
+        "v3.5-halo",
+        "v3.3.7-halo",
+        "v3.3.6-halo",
+        "v3.3.5-halo",
+        "v3.3.4-halo",
+        "v3.3.3-halo",
+        "v3.3.2-halo",
+        "v3.3.1-halo",
+        "v3.2.7-halo"
+      ],
+      "initialized": true,
+      "last_check": "2026-11-22T02:02:09+00:00",
+      "latest": "v3.5.1-halo"
+    }
+  }
+}
