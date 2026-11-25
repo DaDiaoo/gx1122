@@ -9,11 +9,12 @@
         "5.8.7"
       ],
       "initialized": true,
-      "last_check": "2026-11-25T00:26:29+00:00",
+      "last_check": "2026-11-25T09:39:35+00:00",
       "latest": "5.9.0"
     },
     "Null9797/halo-tv": {
       "seen": [
+        "v3.6-halo",
         "v3.5.4-halo",
         "v3.5.3-halo",
         "v3.5.2-halo",
@@ -29,8 +30,8 @@
         "v3.2.7-halo"
       ],
       "initialized": true,
-      "last_check": "2026-11-25T00:26:29+00:00",
-      "latest": "v3.5.4-halo"
+      "last_check": "2026-11-25T09:39:35+00:00",
+      "latest": "v3.6-halo"
     }
   }
 }
